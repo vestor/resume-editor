@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Editor</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide-react@0.263.1/dist/umd/lucide-react.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useRef } = React;
+        const { Plus, Minus, Download, Eye, Edit3, FileText } = lucideReact;
+
+        const ResumeEditor = () => {
+          const [isEditing, setIsEditing] = useState(false);
+          const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+          const resumeRef = useRef(null);
+          
+          const [resumeData, setResumeData] = useState({
+            name: "Your Name",
+            contact: {
+              email: "your.email@example.com",
+              phone: "Your Phone Number"
+            },
+            profile: "Write your professional summary here. This should be a brief overview of your experience, skills, and career objectives. Keep it concise and impactful.",
+            experience: [
+              {
+                title: "Job Title",
+                company: "Company Name",
+                location: "City, State",
+                period: "Start Date — End Date",
+                responsibilities: [
+                  "Add your key responsibilities and achievements here",
+                  "Use bullet points to describe your accomplishments",
+                  "Quantify your results where possible"
+                ]
+              }
+            ],
+            education: [
+              {
+                degree: "Your Degree",
+                institution: "University/School Name",
+                grade: "GPA or Grade",
+                year: "Graduation Year"
+              }
+            ],
+            skills: [
+              "Skill 1",
+              "Skill 2",
+              "Skill 3",
+              "Skill 4",
+              "Add more skills as needed"
+            ]
+          });
+
+          const updateField = (path, value) => {
+            setResumeData(prev => {
+              const newData = { ...prev };
+              const keys = path.split('.');
+              let current = newData;
+              
+              for (let i = 0; i < keys.length - 1; i++) {
+                current = current[keys[i]];
+              }
+              
+              current[keys[keys.length - 1]] = value;
+              return newData;
+            });
+          };
+
+          const addExperience = () => {
+            setResumeData(prev => ({
+              ...prev,
+              experience: [...prev.experience, {
+                title: "",
+                company: "",
+                location: "",
+                period: "",
+                responsibilities: [""]
+              }]
+            }));
+          };
+
+          const removeExperience = (index) => {
+            setResumeData(prev => ({
+              ...prev,
+              experience: prev.experience.filter((_, i) => i !== index)
+            }));
+          };
+
+          const addResponsibility = (expIndex) => {
+            setResumeData(prev => {
+              const newExp = [...prev.experience];
+              newExp[expIndex].responsibilities.push("");
+              return { ...prev, experience: newExp };
+            });
+          };
+
+          const removeResponsibility = (expIndex, respIndex) => {
+            setResumeData(prev => {
+              const newExp = [...prev.experience];
+              newExp[expIndex].responsibilities = newExp[expIndex].responsibilities.filter((_, i) => i !== respIndex);
+              return { ...prev, experience: newExp };
+            });
+          };
+
+          const addEducation = () => {
+            setResumeData(prev => ({
+              ...prev,
+              education: [...prev.education, {
+                degree: "",
+                institution: "",
+                grade: "",
+                year: ""
+              }]
+            }));
+          };
+
+          const removeEducation = (index) => {
+            setResumeData(prev => ({
+              ...prev,
+              education: prev.education.filter((_, i) => i !== index)
+            }));
+          };
+
+          const addSkill = () => {
+            setResumeData(prev => ({
+              ...prev,
+              skills: [...prev.skills, ""]
+            }));
+          };
+
+          const removeSkill = (index) => {
+            setResumeData(prev => ({
+              ...prev,
+              skills: prev.skills.filter((_, i) => i !== index)
+            }));
+          };
+
+          const generateHTML = () => {
+            return `<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${resumeData.name} - Resume</title>
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.4;
+                    margin: 0;
+                    padding: 20px;
+                    font-size: 11px;
+                    color: #333;
+                    background: white;
+                }
+                
+                .container {
+                    max-width: 8.5in;
+                    margin: 0 auto;
+                    background: white;
+                }
+                
+                .header {
+                    text-align: left;
+                    margin-bottom: 15px;
+                    border-bottom: 3px solid #2E86C1;
+                    padding-bottom: 10px;
+                }
+                
+                .name {
+                    font-size: 28px;
+                    font-weight: bold;
+                    color: #2E86C1;
+                    margin: 0;
+                    letter-spacing: 2px;
+                }
+                
+                .contact {
+                    font-size: 11px;
+                    color: #555;
+                    margin-top: 5px;
+                }
+                
+                .section {
+                    margin-bottom: 15px;
+                }
+                
+                .section-title {
+                    font-size: 14px;
+                    font-weight: bold;
+                    color: #2E86C1;
+                    text-transform: uppercase;
+                    border-bottom: 2px solid #2E86C1;
+                    padding-bottom: 3px;
+                    margin-bottom: 8px;
+                    letter-spacing: 1px;
+                }
+                
+                .job-title {
+                    font-weight: bold;
+                    color: #333;
+                    margin-bottom: 2px;
+                }
+                
+                .job-period {
+                    float: right;
+                    font-style: italic;
+                    color: #666;
+                    font-size: 10px;
+                }
+                
+                .job-header {
+                    overflow: hidden;
+                    margin-bottom: 5px;
+                }
+                
+                .job-description {
+                    margin-left: 0;
+                    margin-bottom: 10px;
+                }
+                
+                .job-description li {
+                    margin-bottom: 3px;
+                    text-align: justify;
+                }
+                
+                .education-item {
+                    margin-bottom: 8px;
+                }
+                
+                .degree {
+                    font-weight: bold;
+                    color: #333;
+                }
+                
+                .school {
+                    color: #555;
+                    font-size: 10px;
+                }
+                
+                .skills-grid {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 15px;
+                    margin-top: 5px;
+                }
+                
+                .skill-item {
+                    background: #f8f9fa;
+                    padding: 4px 8px;
+                    border-radius: 3px;
+                    font-size: 10px;
+                    border: 1px solid #e9ecef;
+                }
+                
+                .profile-text {
+                    text-align: justify;
+                    line-height: 1.5;
+                    margin-bottom: 15px;
+                }
+                
+                @media print {
+                    body { 
+                        font-size: 10px;
+                        padding: 10px;
+                    }
+                    .container {
+                        max-width: 100%;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 class="name">${resumeData.name}</h1>
+                    <div class="contact">
+                        ${resumeData.contact.email} | ${resumeData.contact.phone}
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Profile</div>
+                    <div class="profile-text">
+                        ${resumeData.profile}
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Professional Experience</div>
+                    ${resumeData.experience.map(exp => `
+                    <div class="job-header">
+                        <div class="job-title">${exp.title}, ${exp.company}, ${exp.location}</div>
+                        <div class="job-period">${exp.period}</div>
+                    </div>
+                    <ul class="job-description">
+                        ${exp.responsibilities.map(resp => `<li>${resp}</li>`).join('')}
+                    </ul>
+                    `).join('')}
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Education</div>
+                    ${resumeData.education.map(edu => `
+                    <div class="education-item">
+                        <div class="degree">${edu.degree}</div>
+                        <div class="school">${edu.institution} ${edu.grade ? '- ' + edu.grade : ''}</div>
+                        <div class="job-period" style="float: right; margin-top: -15px;">${edu.year}</div>
+                    </div>
+                    `).join('')}
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Technical Skills</div>
+                    <div class="skills-grid">
+                        ${resumeData.skills.map(skill => `<div class="skill-item">${skill}</div>`).join('')}
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>`;
+          };
+
+          const downloadHTML = () => {
+            const htmlContent = generateHTML();
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${resumeData.name.replace(/\s+/g, '_')}_Resume.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          };
+
+          const downloadPDF = async () => {
+            setIsGeneratingPDF(true);
+            
+            try {
+              const iframe = document.createElement('iframe');
+              iframe.style.position = 'absolute';
+              iframe.style.left = '-9999px';
+              iframe.style.width = '210mm';
+              iframe.style.height = '297mm';
+              document.body.appendChild(iframe);
+              
+              const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+              const pdfHTML = generateHTML().replace(/font-size: 11px/g, 'font-size: 10px');
+              
+              iframeDoc.open();
+              iframeDoc.write(pdfHTML);
+              iframeDoc.close();
+              
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              iframe.contentWindow.print();
+              
+              setTimeout(() => {
+                document.body.removeChild(iframe);
+              }, 1000);
+              
+            } catch (error) {
+              console.error('Error generating PDF:', error);
+              alert('Error generating PDF. Please try the HTML download option.');
+            } finally {
+              setIsGeneratingPDF(false);
+            }
+          };
+
+          if (!isEditing) {
+            return React.createElement("div", { className: "min-h-screen bg-gray-50 py-8" },
+              React.createElement("div", { className: "max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden" },
+                React.createElement("div", { className: "bg-blue-600 text-white p-6" },
+                  React.createElement("h1", { className: "text-3xl font-bold" }, "Resume Editor"),
+                  React.createElement("p", { className: "text-blue-100 mt-2" }, "Edit and manage your professional resume")
+                ),
+                React.createElement("div", { className: "p-6" },
+                  React.createElement("div", { className: "flex gap-4 mb-6" },
+                    React.createElement("button", {
+                      onClick: () => setIsEditing(true),
+                      className: "flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    },
+                      React.createElement(Edit3, { size: 20 }),
+                      "Edit Resume"
+                    ),
+                    React.createElement("button", {
+                      onClick: downloadPDF,
+                      disabled: isGeneratingPDF,
+                      className: "flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    },
+                      React.createElement(FileText, { size: 20 }),
+                      isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'
+                    ),
+                    React.createElement("button", {
+                      onClick: downloadHTML,
+                      className: "flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    },
+                      React.createElement(Download, { size: 20 }),
+                      "Download HTML"
+                    )
+                  ),
+                  React.createElement("div", { 
+                    className: "bg-white border-2 border-gray-200 rounded-lg p-8", 
+                    style: { minHeight: '800px' },
+                    dangerouslySetInnerHTML: { __html: generateHTML() }
+                  })
+                )
+              )
+            );
+          }
+
+          return React.createElement("div", { className: "min-h-screen bg-gray-50 py-8" },
+            React.createElement("div", { className: "max-w-6xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden" },
+              React.createElement("div", { className: "bg-blue-600 text-white p-6" },
+                React.createElement("h1", { className: "text-3xl font-bold" }, "Resume Editor - Edit Mode"),
+                React.createElement("div", { className: "flex gap-4 mt-4" },
+                  React.createElement("button", {
+                    onClick: () => setIsEditing(false),
+                    className: "flex items-center gap-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  },
+                    React.createElement(Eye, { size: 20 }),
+                    "Preview Resume"
+                  ),
+                  React.createElement("button", {
+                    onClick: downloadPDF,
+                    disabled: isGeneratingPDF,
+                    className: "flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  },
+                    React.createElement(FileText, { size: 20 }),
+                    isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'
+                  ),
+                  React.createElement("button", {
+                    onClick: downloadHTML,
+                    className: "flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  },
+                    React.createElement(Download, { size: 20 }),
+                    "Download HTML"
+                  )
+                )
+              ),
+              React.createElement("div", { className: "p-6 space-y-8" },
+                // Personal Information section
+                React.createElement("div", { className: "bg-gray-50 p-6 rounded-lg" },
+                  React.createElement("h2", { className: "text-xl font-bold text-gray-800 mb-4" }, "Personal Information"),
+                  React.createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-2" }, "Full Name"),
+                      React.createElement("input", {
+                        type: "text",
+                        value: resumeData.name,
+                        onChange: (e) => updateField('name', e.target.value),
+                        className: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      })
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-2" }, "Email"),
+                      React.createElement("input", {
+                        type: "email",
+                        value: resumeData.contact.email,
+                        onChange: (e) => updateField('contact.email', e.target.value),
+                        className: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      })
+                    ),
+                    React.createElement("div", null,
+                      React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-2" }, "Phone"),
+                      React.createElement("input", {
+                        type: "text",
+                        value: resumeData.contact.phone,
+                        onChange: (e) => updateField('contact.phone', e.target.value),
+                        className: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      })
+                    )
+                  )
+                ),
+                
+                // Profile section
+                React.createElement("div", { className: "bg-gray-50 p-6 rounded-lg" },
+                  React.createElement("h2", { className: "text-xl font-bold text-gray-800 mb-4" }, "Profile"),
+                  React.createElement("textarea", {
+                    value: resumeData.profile,
+                    onChange: (e) => updateField('profile', e.target.value),
+                    rows: 5,
+                    className: "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  })
+                ),
+                
+                // Experience section
+                React.createElement("div", { className: "bg-gray-50 p-6 rounded-lg" },
+                  React.createElement("div", { className: "flex justify-between items-center mb-4" },
+                    React.createElement("h2", { className: "text-xl font-bold text-gray-800" }, "Professional Experience"),
+                    React.createElement("button", {
+                      onClick: addExperience,
+                      className: "flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
+                    },
+                      React.createElement(Plus, { size: 16 }),
+                      "Add Experience"
+                    )
+                  ),
+                  ...resumeData.experience.map((exp, expIndex) =>
+                    React.createElement("div", { key: expIndex, className: "border border-gray-200 p-4 rounded-lg mb-4 bg-white" },
+                      React.createElement("div", { className: "flex justify-between items-start mb-4" },
+                        React.createElement("h3", { className: "font-semibold text-gray-800" }, `Experience ${expIndex + 1}`),
+                        React.createElement("button", {
+                          onClick: () => removeExperience(expIndex),
+                          className: "text-red-600 hover:text-red-800 transition-colors"
+                        },
+                          React.createElement(Minus, { size: 16 })
+                        )
+                      ),
+                      React.createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4 mb-4" },
+                        React.createElement("div", null,
+                          React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Job Title"),
+                          React.createElement("input", {
+                            type: "text",
+                            value: exp.title,
+                            onChange: (e) => updateField(`experience.${expIndex}.title`, e.target.value),
+                            className: "w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          })
+                        ),
+                        React.createElement("div", null,
+                          React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Company"),
+                          React.createElement("input", {
+                            type: "text",
+                            value: exp.company,
+                            onChange: (e) => updateField(`experience.${expIndex}.company`, e.target.value),
+                            className: "w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          })
+                        ),
+                        React.createElement("div", null,
+                          React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Location"),
+                          React.createElement("input", {
+                            type: "text",
+                            value: exp.location,
+                            onChange: (e) => updateField(`experience.${expIndex}.location`, e.target.value),
+                            className: "w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          })
+                        ),
+                        React.createElement("div", null,
+                          React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Period"),
+                          React.createElement("input", {
+                            type: "text",
+                            value: exp.period,
+                            onChange: (e) => updateField(`experience.${expIndex}.period`, e.target.value),
+                            className: "w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          })
+                        )
+                      ),
+                      React.createElement("div", null,
+                        React.createElement("div", { className: "flex justify-between items-center mb-2" },
+                          React.createElement("label", { className: "block text-sm font-medium text-gray-700" }, "Responsibilities"),
+                          React.createElement("button", {
+                            onClick: () => addResponsibility(expIndex),
+                            className: "flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700 transition-colors text-xs"
+                          },
+                            React.createElement(Plus, { size: 12 }),
+                            "Add"
+                          )
+                        ),
+                        ...exp.responsibilities.map((resp, respIndex) =>
+                          React.createElement("div", { key: respIndex, className: "flex gap-2 mb-2" },
+                            React.createElement("textarea", {
+                              value: resp,
+                              onChange: (e) => {
+                                const newExp = [...resumeData.experience];
+                                newExp[expIndex].responsibilities[respIndex] = e.target.value;
+                                setResumeData(prev => ({ ...prev, experience: newExp }));
+                              },
+                              rows: 2,
+                              className: "flex-1 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                            }),
+                            React.createElement("button", {
+                              onClick: () => removeResponsibility(expIndex, respIndex),
+                              className: "text-red-600 hover:text-red-800 transition-colors self-start mt-1"
+                            },
+                              React.createElement(Minus, { size: 16 })
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                ),
+                
+                // Education section
+                React.createElement("div", { className: "bg-gray-50 p-6 rounded-lg" },
+                  React.createElement("div", { className: "flex justify-between items-center mb-4" },
+                    React.createElement("h2", { className: "text-xl font-bold text-gray-800" }, "Education"),
+                    React.createElement("button", {
+                      onClick: addEducation,
+                      className: "flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
+                    },
+                      React.createElement(Plus, { size: 16 }),
+                      "Add Education"
+                    )
+                  ),
+                  ...resumeData.education.map((edu, index) =>
+                    React.createElement("div", { key: index, className: "border border-gray-200 p-4 rounded-lg mb-4 bg-white" },
+                      React.createElement("div", { className: "flex justify-between items-start mb-4" },
+                        React.createElement("h3", { className: "font-semibold text-gray-800" }, `Education ${index + 1}`),
+                        React.createElement("button", {
+                          onClick: () => removeEducation(index),
+                          className: "text-red-600 hover:text-red-800 transition-colors"
+                        },
+                          React.createElement(Minus, { size: 16 })
+                        )
+                      ),
+                      React.createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+                        React.createElement("div", null,
+                          React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Degree"),
+                          React.createElement("input", {
+                            type: "text",
+                            value: edu.degree,
+                            onChange: (e) => updateField(`education.${index}.degree`, e.target.value),
+                            className: "w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          })
+                        ),
+                        React.createElement("div", null,
+                          React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Institution"),
+                          React.createElement("input", {
+                            type: "text",
+                            value: edu.institution,
+                            onChange: (e) => updateField(`education.${index}.institution`, e.target.value),
+                            className: "w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          })
+                        ),
+                        React.createElement("div", null,
+                          React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Grade/Score"),
+                          React.createElement("input", {
+                            type: "text",
+                            value: edu.grade,
+                            onChange: (e) => updateField(`education.${index}.grade`, e.target.value),
+                            className: "w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          })
+                        ),
+                        React.createElement("div", null,
+                          React.createElement("label", { className: "block text-sm font-medium text-gray-700 mb-1" }, "Year"),
+                          React.createElement("input", {
+                            type: "text",
+                            value: edu.year,
+                            onChange: (e) => updateField(`education.${index}.year`, e.target.value),
+                            className: "w-full p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                          })
+                        )
+                      )
+                    )
+                  )
+                ),
+
+                // Skills section
+                React.createElement("div", { className: "bg-gray-50 p-6 rounded-lg" },
+                  React.createElement("div", { className: "flex justify-between items-center mb-4" },
+                    React.createElement("h2", { className: "text-xl font-bold text-gray-800" }, "Technical Skills"),
+                    React.createElement("button", {
+                      onClick: addSkill,
+                      className: "flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors text-sm"
+                    },
+                      React.createElement(Plus, { size: 16 }),
+                      "Add Skill"
+                    )
+                  ),
+                  React.createElement("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-4" },
+                    ...resumeData.skills.map((skill, index) =>
+                      React.createElement("div", { key: index, className: "flex gap-2" },
+                        React.createElement("input", {
+                          type: "text",
+                          value: skill,
+                          onChange: (e) => {
+                            const newSkills = [...resumeData.skills];
+                            newSkills[index] = e.target.value;
+                            setResumeData(prev => ({ ...prev, skills: newSkills }));
+                          },
+                          className: "flex-1 p-2 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent text-sm"
+                        }),
+                        React.createElement("button", {
+                          onClick: () => removeSkill(index),
+                          className: "text-red-600 hover:text-red-800 transition-colors"
+                        },
+                          React.createElement(Minus, { size: 16 })
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          );
+        };
+
+        ReactDOM.render(React.createElement(ResumeEditor), document.getElementById('root'));
+    </script>
+</body>
+</html>
